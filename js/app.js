@@ -1,14 +1,23 @@
 (function(win, doc) {
     'use strict';
+    // Adiciono ao body da index o evento onload passando a função para carregar a tabela
+    doc.body.addEventListener('onload', mostraPatio());
     // Atribuindo ao formulário um evento de submit a função de cadastrar veículo
     doc.querySelector('[data-js="formulario"]').addEventListener('submit', cadastraVeiculo);
     // Função de cadastro de veículos
     function cadastraVeiculo(event) {
+        // Isso aqui todo mundo já sabe. Faz com que o comportamento padrão do formulário seja cancelado
+        event.preventDefault();
         // Seleção dos inputs
         var modeloVeiculo = doc.querySelector('[data-js="modeloVeiculo"]').value;
         var placaVeiculo = doc.querySelector('[data-js="placaVeiculo"]').value;
         // Atribuindo a data/hora atual
         var time = new Date();
+        // Validação do formulário
+        if(!modeloVeiculo && ! placaVeiculo) {
+            alert('Por favor, preencha todos os campos.');
+            return false;
+        }
         // Objeto carro com todas as propriedades
         var carro = {
             modelo: modeloVeiculo,
@@ -31,11 +40,11 @@
             carros.push(carro);
             localStorage.setItem('patio', JSON.stringify(carros));
         }
+        // Limpo o formulário
+        doc.querySelector('[data-js="formulario"]').reset();
         // Executo a função para que todas as vezes que forem cadastrados novos carros
         // Atualize a tabela automaticamente
         mostraPatio();
-        // Isso aqui todo mundo já sabe. Faz com que o comportamento padrão do formulário seja cancelado
-        event.preventDefault();
     } // FINAL da Função de cadastro de veículos
 
     // Função para listar os carros cadastrados no pátio
@@ -53,15 +62,32 @@
             var placa = carros[i].placa;
             var hora = carros[i].hora;
             var minutos = carros[i].minutos;
-
             // Agora atribuo o resultado ao carrosResultados.innerHTML
             carrosResultado.innerHTML += '<tr><td>' + modelo +
                                          '</td><td>' + placa +
                                          '</td><td>' + hora + ':' + minutos +
-                                         '</td></tr>';
+                                         '</td><td><button class="btn btn-danger" data-js="'+ placa +'" name="btnExcluir">Excluir</button></td></tr>';
         }
     }// FINAL da Função para listar os carros cadastrados no pátio
-    // Adiciono ao body da index o evento onload passando a função para carregar a tabela
-    doc.body.addEventListener('onload', mostraPatio());
+
+    var placa = doc.querySelectorAll('[name="btnExcluir"]');
+    for (var i = 0; i < placa.length; i++) {
+        placa[i].addEventListener('click', function() {
+            apagarVeiculo(this.getAttribute('data-js'));
+        });
+    }
+    // Função para exclusão de veículo
+    function apagarVeiculo(placa) {
+        var carros = JSON.parse(localStorage.getItem('patio'));
+
+        for (var i = 0; i < carros.length; i++) {
+            if(carros[i].placa === placa)
+                carros.splice(i, 1);
+
+            localStorage.setItem('patio', JSON.stringify(carros));
+        }
+
+        mostraPatio();
+    } // FINAL da Função para exclusão de veículo
 
 })(window, document);
